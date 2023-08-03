@@ -6,19 +6,26 @@
 #include<string.h>
 #include<complex.h>
 #include<math.h>
-#define ARRSIZE(ARR) sizeof(ARR)/sizeof(ARR[0])  //size of arrary 
+#include<unistd.h>  // acces
+#include<string.h>
 
-float globalframes[20000]={0},globalampritudes[4800];
+#define ARRSIZE(ARR) sizeof(ARR)/sizeof(ARR[0])  //size of arrary 
+float volume=0;
+char text[65];
+char naslov[65]="MIX NARODNE MUZIKE ZA DINAMICNU VOZNJU (2022).mp3";
+
+size_t global_text_counter=0;
+float globalframes[48000]={0};
 size_t globalframesnum;  //Global frames callback is calld by sampling rate 48000 separate thread from main (Is not in begin end drawing)
 
 void callback(void *buffer,uint16_t frames)
 {
-    float complex out[4800];
     if(frames>ARRSIZE(globalframes)) //limit for memcp
     {
         frames=ARRSIZE(globalframes);
     }
     memcpy(globalframes,buffer,frames*sizeof(float));//copy curent in global 
+    globalframesnum=frames;
 }
 
 
@@ -26,20 +33,17 @@ void callback(void *buffer,uint16_t frames)
 void Draw() //DRAW WAWE FORM
 {
     float x=(float)ARRSIZE(globalframes)/GetScreenWidth(),y=(float)GetScreenHeight()/2;  // half y midle line cord mov 
-    //printf("%f ",x);
-    DrawLine(0,y,x,y,GREEN);
-    for (size_t i = 0; i < globalframesnum; i+=1)
+    //DrawLine(670,840,y,y,GREEN);
+    for (size_t i = 0; i < globalframesnum+100; i++)
     {
         /* code */
-        if(i%2==0)
-        {
             float sample=globalframes[i];  //2 chanel same
             if(sample<0)   //if sample - just+ then print + down on x axis 
-                DrawRectangle(i*x,y,6,(-1)*sample*(y),GREEN);
+                DrawRectangle(i+650,y,1,(-1)*sample*(y),GREEN);
 
             else  //if difer
-                DrawRectangle(i*x,y-sample*y,6,sample*(y),GREEN);  
-        }
+                DrawRectangle(i+650,y-sample*y,1,sample*(y),GREEN);  
+        
     }
 }
 //n>0
@@ -81,45 +85,174 @@ void fft(float *in,size_t pivot,float complex *out,size_t n)  //coll
 
 void Draw_fft() //DRAW WAWE FORM
 {
-    float x=(float)ARRSIZE(globalframes)/GetScreenWidth(),y=(float)GetScreenHeight()/2;  // half y midle line cord mov 
+    float x=0.1*(float)ARRSIZE(globalframes)/GetScreenWidth(),y=(float)GetScreenHeight()/2;  // half y midle line cord mov 
     float frequency;
-    float complex ampritude[20000];
+    float complex ampritude[48000];
     float *sample;
     //memcpy(sample,globalframes,100);
     //printf("Nesto");
     //int samples=&globalframes;
-    DrawLine(0,y,840,y,GREEN);
-    fft(globalframes,1,ampritude,840);
-    for (size_t i = 0; i < 840; i++)
+    //DrawLine(0,y,400,y,GREEN);
+    fft(globalframes,1,ampritude,400);
+    for (size_t i = 0; i < 250; i++)
     {
-        frequency=log10f((float)i);
+        //ampritude[i]=log10f(ampritude[i]);
+        //frequency=log10f((float)i);
         //frequency=i;
         
           float a=(1)*sqrtf(ampritude[i])*creal(ampritude[i])+cimag(ampritude[i])*cimag(ampritude[i]);
-            DrawRectangle(i,320-a,frequency,a,GREEN);  
+            DrawRectangle(i,y-a/2,4,a/2,GREEN);
+            DrawRectangle(i,y,4,a/2,GREEN);  
+  
     }
 }
 
 
+void Procces()
+{
+    int key = GetCharPressed();
+
+            // Check if more characters have been pressed on the same frame
+            while (key > 0)
+            {
+                // NOTE: Only allow keys in range [32..125]
+                if ((key >= 32) && (key <= 125) && (global_text_counter < ARRSIZE(text)))
+                {
+                    text[global_text_counter] = (char)key;
+                    text[global_text_counter+1] = '\0'; // Add null terminator at the end of the string.
+                    global_text_counter++;
+                }
+                key = GetCharPressed();  // Check next character in the queue
+            }
+
+            if (IsKeyPressed(KEY_BACKSPACE)&&global_text_counter!=0) //delete
+            {
+                global_text_counter--;
+                if (global_text_counter < 0) 
+                    global_text_counter = 0;
+                text[global_text_counter] = '\0';
+            }
+}
+void Draw_input(Rectangle textBox)
+{
+    size_t i  =0 ;
+    bool mouseOnText = false;
+    if (CheckCollisionPointRec(GetMousePosition(), textBox)) 
+        mouseOnText = true;
+    else 
+        mouseOnText = false;
+
+   if(mouseOnText)
+    {
+       Procces();
+    }
+      if(text[0]=='\0' && !mouseOnText)
+        {
+            DrawText("Sta se slusa !!!",(int)textBox.x,(int)textBox.y,30,GREEN);
+            DrawRectangleLines(textBox.x,textBox.y,textBox.width,textBox.height,GREEN);
+
+        }
+      else
+        DrawText(text,(int)textBox.x,(int)textBox.y,30,GREEN);
+}
+
+Music Change_File(Music song)
+{
+    if(IsMusicStreamPlaying(song))
+    {
+        UnloadMusicStream(song);
+    }
+    if(IsAudioStreamProcessed(song.stream))
+    {
+        DetachAudioStreamProcessor(song.stream,callback);
+    }
+    song=LoadMusicStream(text);
+    PlayMusicStream(song);
+    AttachAudioStreamProcessor(song.stream,callback);
+    ClearBackground(BLACK);
+    SetMusicVolume(song,volume);
+
+    for (size_t i = 0; i < ARRSIZE(naslov); i++)
+    {
+        /* code */
+        naslov[i]=text[i];
+    }
+    text[0]='\0';
+    global_text_counter=0;
+    return song;   
+}
+void Draw_volume(Rectangle volumeBox,Music song)
+{
+    char pom[34];
+                sprintf(pom,"volume:%d ",(int)(100*volume));
+                DrawText(pom,volumeBox.x,volumeBox.y,30,GREEN);
+                int key=GetKeyPressed();
+                ///printf("%d",key);
+                if(key==KEY_UP&&volume!=1.0f)
+                {
+                    volume+=0.025f;
+                    SetMusicVolume(song,volume);
+
+                }
+                if(key==KEY_DOWN&&volume>=0.0f)
+                {
+                    SetMusicVolume(song,volume);
+                    volume-=0.025;
+                }
+                if(volume<=0.0f)
+                {
+                    volume=0.0f;
+                }
+}
+void Draw_time(Rectangle volumeBox,Music song)
+{
+    float duration=GetMusicTimeLength(song),passed=GetMusicTimePlayed(song);
+    char pom[65];
+    sprintf(pom,"%d : %d - %d : %d",((int)passed/60)%60,(int)passed%60,((int)duration/60)%60,(int)duration%60);
+    DrawText(pom,600,volumeBox.y,30,GREEN);   
+}
+
+
+
 int main(void)
 {
-    InitWindow(840,620,"NESTO");
+    InitWindow(840,600,"NESTO");
     InitAudioDevice();
     SetTargetFPS(30);  //LOWER FPS BETHER VISual
-    Music song=LoadMusicStream(".mp3");
+    Music song;
+    song=LoadMusicStream("MIX NARODNE MUZIKE ZA DINAMICNU VOZNJU (2022).mp3");
     PlayMusicStream(song);  //2 chanel 48000 sampling rate 32 bits
     SetMusicVolume(song,0.0f);
+    //DrawRectangle()
     AttachAudioStreamProcessor(song.stream,callback);
+    Rectangle volumeBox = { 100,500 ,300, 50, 50 };//same as DrawRectangle(y,x,with,height,color)
+    Rectangle textBox = { 250,320-80,350, 50, 50 };//same as DrawRectangle(y,x,with,height,color)
 
     //printf("%u ",song.stream.channels);
+    for (size_t i = 0; i < ARRSIZE(text); i++)
+    {
+        text[i]='\0';
+    }
+    int x =GetScreenWidth(),y=GetScreenHeight();
+    size_t i=0;
 
     while (!WindowShouldClose())
     {
             BeginDrawing();
                 UpdateMusicStream(song);
-                ClearBackground(RAYWHITE);
-                //Draw();
+                ClearBackground(BLACK);
+                DrawText("B-PLAYER ! ! !",x/2-150,0,40,GREEN);
+                DrawText(naslov,x-i,100,20,GREEN);
+                i++;
+                if(i==800)
+                    i=0;
+                Draw();
                 Draw_fft();
+                Draw_input(textBox);
+                Draw_time(volumeBox,song);
+                Draw_volume(volumeBox,song);
+                if(!access(text,F_OK))
+                    song=Change_File(song);
             EndDrawing();
     }
     CloseWindow();   

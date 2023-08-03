@@ -106,7 +106,7 @@ int main(void)
     InitWindow(840,620,"NESTO");
     InitAudioDevice();
     SetTargetFPS(30);  //LOWER FPS BETHER VISual
-    Music song=LoadMusicStream("MIX NARODNE MUZIKE ZA DINAMICNU VOZNJU (2022).mp3");
+    Music song=LoadMusicStream(".mp3");
     PlayMusicStream(song);  //2 chanel 48000 sampling rate 32 bits
     SetMusicVolume(song,0.0f);
     AttachAudioStreamProcessor(song.stream,callback);

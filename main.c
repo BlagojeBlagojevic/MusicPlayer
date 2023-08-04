@@ -208,8 +208,11 @@ void Draw_time(Rectangle volumeBox,Music song)
 {
     float duration=GetMusicTimeLength(song),passed=GetMusicTimePlayed(song);
     char pom[65];
-    sprintf(pom,"%d : %d - %d : %d",((int)passed/60)%60,(int)passed%60,((int)duration/60)%60,(int)duration%60);
-    DrawText(pom,600,volumeBox.y,30,GREEN);   
+    if(IsMusicStreamPlaying(song))
+      {
+          sprintf(pom,"%d : %d - %d : %d",((int)passed/60)%60,(int)passed%60,((int)duration/60)%60,(int)duration%60);
+          DrawText(pom,600,volumeBox.y,30,GREEN);
+      }   
 }
 
 
@@ -220,11 +223,11 @@ int main(void)
     InitAudioDevice();
     SetTargetFPS(30);  //LOWER FPS BETHER VISual
     Music song;
-    song=LoadMusicStream("MIX NARODNE MUZIKE ZA DINAMICNU VOZNJU (2022).mp3");
-    PlayMusicStream(song);  //2 chanel 48000 sampling rate 32 bits
-    SetMusicVolume(song,0.0f);
+    //song=LoadMusicStream("MIX NARODNE MUZIKE ZA DINAMICNU VOZNJU (2022).mp3");
+    //PlayMusicStream(song);  //2 chanel 48000 sampling rate 32 bits
+    //SetMusicVolume(song,0.0f);
     //DrawRectangle()
-    AttachAudioStreamProcessor(song.stream,callback);
+    //AttachAudioStreamProcessor(song.stream,callback);
     Rectangle volumeBox = { 100,500 ,300, 50, 50 };//same as DrawRectangle(y,x,with,height,color)
     Rectangle textBox = { 250,320-80,350, 50, 50 };//same as DrawRectangle(y,x,with,height,color)
 

@@ -1,7 +1,10 @@
 # B-player
 
 
-![Screenshot from 2023-08-04 12-32-05](https://github.com/BlagojeBlagojevic/MusicPlayer/assets/100707842/fd229aed-845b-4329-abae-fc07ef6be5fd)
+![Screenshot from 2023-08-06 13-46-09](https://github.com/BlagojeBlagojevic/MusicPlayer/assets/100707842/b6dd2c01-e5b0-493a-9573-3d99f00bb118)
+
+
+
 
 
 

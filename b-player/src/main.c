@@ -11,9 +11,9 @@
 
 #define ARRSIZE(ARR) sizeof(ARR)/sizeof(ARR[0])  //size of arrary 
 float volume=0;
-char text[65];
-char naslov[65]="";
-
+char text[65]="1.mp3";
+char naslov[65]="1.mp3";
+bool is_playing=false;
 size_t global_text_counter=0;
 float globalframes[48000];
 size_t globalframesnum;  //Global frames callback is calld by sampling rate 48000 separate thread from main (Is not in begin end drawing)
@@ -214,6 +214,52 @@ void Draw_time(Rectangle volumeBox,Music song)
           DrawText(pom,600,volumeBox.y,30,GREEN);
       }   
 }
+
+void Draw_progres(Music song)
+{
+            //progres
+                Vector2 A={220,545},B={220,565},C={230,555};
+                Rectangle play={220,545,10,20};
+                //CHECK COLISION
+                if(CheckCollisionPointRec(GetMousePosition(),play))
+                {
+                    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                    {
+                        is_playing=!is_playing;
+                    }
+
+                }
+                if(is_playing)
+                {
+                    //pause button
+                    DrawLine(play.x,play.y,play.x,play.y+20,GREEN);
+                    DrawLine(play.x+1,play.y,play.x+1,play.y+20,GREEN);
+                    DrawLine(play.x+2,play.y,play.x+2,play.y+20,GREEN);
+                    DrawLine(play.x+10,play.y,play.x+10,play.y+20,GREEN);
+                    DrawLine(play.x+1+10,play.y,play.x+1+10,play.y+20,GREEN);
+                    DrawLine(play.x+2+10,play.y,play.x+2+10,play.y+20,GREEN);
+                    ResumeMusicStream(song);
+                }
+                else
+                   {
+                        PauseMusicStream(song);
+                        DrawTriangle(A,B,C,GREEN);
+                   }
+                Rectangle progresbar={240,550,350,20};
+                DrawRectangleLines(240,550,350,10,GREEN); 
+                float percent=350*GetMusicTimePlayed(song)/GetMusicTimeLength(song);
+                DrawRectangle(240,550,percent,10,GREEN);
+
+                if(CheckCollisionPointRec(GetMousePosition(),progresbar)&&IsMusicStreamPlaying(song))
+                {
+                    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                    {
+                        PauseMusicStream(song);
+                        float position=((GetMousePosition().x-240.0)/350)*GetMusicTimeLength(song);
+                        SeekMusicStream(song, position);
+                    }     
+                }
+}
 int main(void)
 {
     InitWindow(840,600,"NESTO");
@@ -222,13 +268,12 @@ int main(void)
     Music song;
     Rectangle volumeBox = { 100,500 ,300, 50, 50 };//same as DrawRectangle(y,x,with,height,color)
     Rectangle textBox = { 250,320-80,350, 50, 50 };//same as DrawRectangle(y,x,with,height,color)
-    for (size_t i = 0; i < ARRSIZE(text); i++)
-    {
-        text[i]='\0';
-    }
     int x =GetScreenWidth(),y=GetScreenHeight();
     size_t i=0;
-
+    song=LoadMusicStream(text);
+    PlayMusicStream(song);
+    AttachAudioStreamProcessor(song.stream,callback);
+    SetMusicVolume(song,volume);
     while (!WindowShouldClose())
     {
             BeginDrawing();
@@ -244,6 +289,7 @@ int main(void)
                 Draw_input(textBox);
                 Draw_time(volumeBox,song);
                 Draw_volume(volumeBox,song);
+                Draw_progres(song);
                 if(!access(text,F_OK))
                     song=Change_File(song);
             EndDrawing();

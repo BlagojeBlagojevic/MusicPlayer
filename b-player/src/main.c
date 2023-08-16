@@ -74,11 +74,7 @@ void fft(float *in,size_t pivot,float complex *out,size_t n)  //coll
         out[k]=e+v;
         out[k+n/2]=e-v; 
     }
-    //for (size_t i = 0; i < n; i++)
-    //{
-    //    /* code */
-    //    printf("%f %f\n",creal(out[i]),cimag(out[i]));
-    //}
+   
     
     
 }

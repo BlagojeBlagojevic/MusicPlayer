@@ -6,7 +6,7 @@
 #include<string.h>
 #include<complex.h>
 #include<math.h>
-#include<unistd.h>  // acces
+#include<unistd.h>  // access
 #include<string.h>
 
 #define ARRSIZE(ARR) sizeof(ARR)/sizeof(ARR[0])  //size of arrary 

@@ -96,7 +96,8 @@ void Draw_fft() //DRAW WAWE FORM
         //frequency=log10f((float)i);
         //frequency=i;
         
-          float a=(1/400)*sqrtf(creal(ampritude[i])*creal(ampritude[i])+cimag(ampritude[i])*cimag(ampritude[i]));
+          //float a=(1/400)*sqrtf(creal(ampritude[i])*creal(ampritude[i])+cimag(ampritude[i])*cimag(ampritude[i]));
+            float a=(1)*sqrtf((ampritude[i])*creal(ampritude[i])+cimag(ampritude[i])*cimag(ampritude[i]));
             DrawRectangle(i,y-a/2,4,a/2,GREEN);
             DrawRectangle(i,y,4,a/2,GREEN);  
   
